@@ -1,0 +1,75 @@
+#Interface Segregation Principle
+
+#BAD Solution
+"""
+from abc import ABC, abstractmethod
+
+class Mammals(ABC):
+    @abstractmethod
+    def swim(self):
+        print("Can swim.")
+
+
+    @abstractmethod
+    def walk(self):
+        print("Can walk.")
+
+
+class Human(Mammals):
+    def swim(self):
+        print("Human can swim.")
+
+    def walk(self):
+        print("Human can walk.")
+
+class Whale(Mammals):
+    def swim(self):
+        print("Whale can swim.")
+
+    def walk(self):
+        print("Whale cannot walk.")
+        #raise NotImplementedError
+
+
+Human().walk()
+Human().swim()
+
+Whale().swim()
+Whale().walk()
+"""
+
+
+#GOOD Solution
+
+from abc import ABC, abstractmethod
+
+
+class Walker(ABC):
+
+    @abstractmethod
+    def walk(self):
+        print("Can walk.")
+
+class Swimmer(ABC):
+
+    @abstractmethod
+    def swim(self):
+        print("Can swim.")
+
+class Human(Walker, Swimmer):
+    def walk(self):
+        print("Human can walk.")
+
+    def swim(self):
+        print("Human can swim.")
+
+class Whale(Swimmer):
+    def swim(self):
+        print("Whale can swim.")
+
+
+if __name__ == "__main__":
+
+    Human().walk()
+    Human().swim()
+    Whale().swim()
