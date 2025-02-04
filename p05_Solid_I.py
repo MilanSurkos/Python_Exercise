@@ -1,61 +1,73 @@
-# Dependency inversion principle
-# Bad Solution
+# Interface Segregation Principle
+
+# BAD solution
+"""
+from abc import ABC, abstractmethod
+
+
+class Mammals(ABC):
+    @abstractmethod
+    def swim(self):
+        print("Can swim.")
+
+    @abstractmethod
+    def walk(self):
+        print("Can walk.")
+
+
+class Human(Mammals):
+    def swim(self):
+        print("Human can swim.")
+
+    def walk(self):
+        print("Human can walk.")
+
+
+class Whale(Mammals):
+    def swim(self):
+        print("Whale can swim.")
+
+    def walk(self):
+        print("Whale can not walk.")
+        #raise NotImplementedError
+
+
+Human().walk()
+Human().swim()
+Whale().swim()
+Whale().walk()
 """
 
-class FXConvertor:
-    def convert(self, from_currency, to_currency, amount):
-        print(f"{amount} {from_currency} = {amount * 1.2} {to_currency}")
+# GOOD solution
+from abc import ABC, abstractmethod
 
 
-class App:
-    def start(self):
-        convertor = FXConvertor()
-        convertor.convert("Eur", "USD", 100)
+class Walker(ABC):
+    @abstractmethod
+    def walk(self):
+        print("can walk")
 
 
-if __name__ == "__main__":
-    app = App()
-    app.start()
-"""
-
-# Good solution
-
-from abc import ABC
-
-class CurrencyConverter(ABC):
-    def convert(self,from_currency, to_currency, amount):
-        pass
+class Swimmer(ABC):
+    @abstractmethod
+    def swim(self):
+        print("can swim")
 
 
-class FXConverter(CurrencyConverter):
-    def convert(self,from_currency, to_currency, amount):
-        print("Using FXConvertor")
-        print(f"{amount} {from_currency} = {amount * 1.2} {to_currency}")
-        return amount * 1.2
+class Human(Walker, Swimmer):
+    def walk(self):
+        print("Human can walk.")
 
-class AlphaConverter(CurrencyConverter):
-    def convert(self,from_currency, to_currency, amount):
-        print("Using AlphaConvertor")
-        print(f"{amount} {from_currency} = {amount * 1.5} {to_currency}")
-        return amount * 1.5
+    def swim(self):
+        print("Human can swim.")
 
-class App:
-    def __init__(self, converter):
-        self.converter = converter
 
-    def start(self, from_currency, to_currency, amount):
-        self.converter.convert(from_currency, to_currency, amount)
+class Whale(Swimmer):
+    def swim(self):
+        print("Whale can swim.")
 
-if __name__ == "__main__":
-    choice = input("Select converter: Alpha[A] or FX[F]: ")
-    if choice == "A":
-        convertor = AlphaConverter()
-    elif choice == "F":
-        convertor = FXConverter()
-    else:
-        convertor = AlphaConverter()
-    app = App(convertor)
-    from_curency = input("From currency: ")
-    to_currency = input("To currency: ")
-    amount = int(input("Amount: "))
-    app.start(from_curency, to_currency, amount)
+
+if __name__ == '__main__':
+    Human().walk()
+    Human().swim()
+    Whale().swim()

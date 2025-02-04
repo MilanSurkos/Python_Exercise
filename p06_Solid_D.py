@@ -1,75 +1,64 @@
-#Interface Segregation Principle
+# Dependency inversion principle
 
-#BAD Solution
+# BAD solution
 """
-from abc import ABC, abstractmethod
-
-class Mammals(ABC):
-    @abstractmethod
-    def swim(self):
-        print("Can swim.")
+class FXConverter:
+    def convert(self, from_currency, to_currency, amount):
+        print(f"{amount} {from_currency} = {amount * 1.2} {to_currency}")
 
 
-    @abstractmethod
-    def walk(self):
-        print("Can walk.")
+class App:
+    def start(self):
+        converter = FXConverter()
+        converter.convert("EUR", "USD", 100)
 
 
-class Human(Mammals):
-    def swim(self):
-        print("Human can swim.")
-
-    def walk(self):
-        print("Human can walk.")
-
-class Whale(Mammals):
-    def swim(self):
-        print("Whale can swim.")
-
-    def walk(self):
-        print("Whale cannot walk.")
-        #raise NotImplementedError
-
-
-Human().walk()
-Human().swim()
-
-Whale().swim()
-Whale().walk()
+if __name__ == '__main__':
+    app = App()
+    app.start()
 """
 
-
-#GOOD Solution
-
-from abc import ABC, abstractmethod
+# GOOD solution
+from abc import ABC
 
 
-class Walker(ABC):
-
-    @abstractmethod
-    def walk(self):
-        print("Can walk.")
-
-class Swimmer(ABC):
-
-    @abstractmethod
-    def swim(self):
-        print("Can swim.")
-
-class Human(Walker, Swimmer):
-    def walk(self):
-        print("Human can walk.")
-
-    def swim(self):
-        print("Human can swim.")
-
-class Whale(Swimmer):
-    def swim(self):
-        print("Whale can swim.")
+class CurrencyConverter(ABC):
+    def convert(self, from_currency, to_currency, amount):
+        pass
 
 
-if __name__ == "__main__":
+class FXConverter(CurrencyConverter):
+    def convert(self, from_currency, to_currency, amount):
+        print("Converting currency using FX API.")
+        print(f"{amount} {from_currency} = {amount * 1.2} {to_currency}")
+        return amount * 1.2
 
-    Human().walk()
-    Human().swim()
-    Whale().swim()
+
+class AlphaConverter(CurrencyConverter):
+    def convert(self, from_currency, to_currency, amount):
+        print("Converting currency using Alpha API.")
+        print(f"{amount} {from_currency} = {amount * 1.15} {to_currency}")
+        return amount * 1.15
+
+
+class App:
+    def __init__(self, converter):
+        self.converter = converter
+
+    def start(self, from_currency, to_currency, amount):
+        self.converter.convert(from_currency, to_currency, amount)
+
+
+if __name__ == '__main__':
+    choice = input("Select converter: Alpha[A] or FX[F]: ")
+    if choice == 'A':
+        convertor = AlphaConverter()
+    elif choice == 'F':
+        convertor = FXConverter()
+    else:
+        convertor = AlphaConverter()
+    app = App(convertor)
+    from_currency = input("From currency: ")
+    to_currency = input("To currency: ")
+    amount = int(input("Amount: "))
+    app.start(from_currency, to_currency, amount)
