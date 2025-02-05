@@ -1,117 +1,141 @@
-class Point:
-    def __init__(self, x, y):
-        self._x = x
-        self._y = y
-
-    def __str__(self):
-        return f"({self._x}, {self._y})"
-
-
-class Line:
-    def draw(self, length):
+class FragStatistics:
+    def increment_frag_count(self):
         pass
 
-    def starting_point(self):
+    def increment_death_count(self):
         pass
 
-    def starting_point(self, value):
+    def reset(self):
         pass
 
 
-class SolidLine(Line):
+class FirstPersonShooterFragStatistics(FragStatistics):
     def __init__(self):
-        self._point = Point(0, 0)
+        self._frags_count = 0
+        self._death_count = 0
 
-    def draw(self, length):
-        print(f"Drawing solid line starting in {self._point} with length {length}")
+    def increment_frag_count(self):
+        self._frags_count += 1
+        return self._frags_count
 
-    @property
-    def starting_point(self):
-        return self._point
+    def increment_death_count(self):
+        self._death_count += 1
+        return self._death_count
 
-    @starting_point.setter
-    def starting_point(self, value):
-        self._point = value
-
-
-class DottedLine(Line):
-    def __init__(self):
-        self._point = Point(0, 0)
-
-    def draw(self, length):
-        print(f"Drawing dotted line starting in {self._point} with length {length}")
-
-    @property
-    def starting_point(self):
-        return self._point
-
-    @starting_point.setter
-    def starting_point(self, value):
-        self._point = value
+    def reset(self):
+        self._frags_count = 0
+        self._death_count = 0
 
 
-class CompoundLine(Line):
-    def __init__(self):
-        self._lines = []
+class DeathCountInfoDecorator(FragStatistics):
+    def __init__(self, frag_statistics):
+        self._frag_statistics = frag_statistics
 
-    def draw(self, length):
-        for line in self._lines:
-            line.draw(length)
+    def increment_frag_count(self):
+        return self._frag_statistics.increment_frag_count()
 
-    @property
-    def starting_point(self):
-        if not self._lines:
-            return Point(0, 0)
-        return self._lines[0].starting_point()
+    def increment_death_count(self):
+        print("Enemy died.")
+        return self._frag_statistics.increment_death_count()
 
-    @starting_point.setter
-    def starting_point(self, value):
-        for line in self._lines:
-            line.starting_point = value
+    def reset(self):
+        self._frag_statistics.reset()
 
-    def add_line(self, line):
-        self._lines.append(line)
 
-    def remove_line(self, line):
-        self._lines.remove(line)
+class DisplayCountersDecorator(FragStatistics):
+    def __init__(self, frag_statistics):
+        self._frag_statistics = frag_statistics
+
+    def increment_frag_count(self):
+        frag_count = self._frag_statistics.increment_frag_count()
+        print(f"Your frag count is: {frag_count}")
+        return frag_count
+
+    def increment_death_count(self):
+        death_count = self._frag_statistics.increment_death_count()
+        print(f"Your death count is: {death_count}")
+        return death_count
+
+    def reset(self):
+        self._frag_statistics.reset()
+        print("Stats reset - KDR is equal to 0")
+
+
+class FragDeathRatioDecorator(FragStatistics):
+    def __init__(self, frag_statistics):
+        self._frag_statistics = frag_statistics
+        self._current_frag_count = None
+        self._current_death_count = None
+
+    def increment_frag_count(self):
+        self._current_frag_count = self._frag_statistics.increment_frag_count()
+        self._display_frag_deaths_ratio()
+        return self._current_frag_count
+
+    def increment_death_count(self):
+        self._current_death_count = self._frag_statistics.increment_death_count()
+        self._display_frag_deaths_ratio()
+        return self._current_death_count
+
+    def _display_frag_deaths_ratio(self):
+        if self._current_frag_count and self._current_death_count:
+            print(f"KDR is {self._current_frag_count/self._current_death_count}")
+
+    def reset(self):
+        self._frag_statistics.reset()
+
+
+class FragInfoDecorator(FragStatistics):
+    def __init__(self, frag_statistics):
+        self._frag_statistics = frag_statistics
+
+    def increment_frag_count(self):
+        print("Enemy fragged")
+        return self._frag_statistics.increment_frag_count()
+
+    def increment_death_count(self):
+        return self._frag_statistics.increment_death_count()
+
+    def reset(self):
+        self._frag_statistics.reset()
 
 
 def main():
-    dotted1 = DottedLine()
-    dotted1.starting_point = (1, 1)
+    statistics = FirstPersonShooterFragStatistics()
 
-    dotted2 = DottedLine()
-    dotted2.starting_point = (2, 2)
+    statistics.increment_death_count()
+    statistics.increment_frag_count()
 
-    solid1 = SolidLine()
-    solid1.starting_point = (3, 3)
+    decorated_statistics = DeathCountInfoDecorator(statistics)
+    decorated_statistics.increment_death_count()
+    decorated_statistics.increment_frag_count()
 
-    solid2 = SolidLine()
-    solid2.starting_point = (4, 4)
+    print('-'*80)
+    decorated_statistics = DisplayCountersDecorator(statistics)
+    decorated_statistics.increment_death_count()
+    decorated_statistics.increment_frag_count()
 
-    compound1 = CompoundLine()
-    compound2 = CompoundLine()
+    print('-'*80)
+    decorated_statistics = DisplayCountersDecorator(DeathCountInfoDecorator(statistics))
+    decorated_statistics.increment_death_count()
+    decorated_statistics.increment_frag_count()
 
-    compound1.add_line(dotted1)
-    compound1.add_line(solid1)
-    compound1.add_line(compound2)
-    compound2.add_line(dotted2)
-    compound2.add_line(solid2)
+    print('-' * 80)
+    decorated_statistics = DeathCountInfoDecorator(DisplayCountersDecorator(statistics))
+    decorated_statistics.increment_death_count()
+    decorated_statistics.increment_frag_count()
 
-    compound2.starting_point = (5, 5)
-    print("Compound 1 v. 1:")
-    compound1.draw(5)
+    print('-'*80)
+    decorated_statistics = FragDeathRatioDecorator(
+        FragInfoDecorator(
+            DisplayCountersDecorator(
+                DeathCountInfoDecorator(
+                    statistics))))
 
-    compound1.starting_point = (10, 10)
-    print("Compound 1 v. 2:")
-    compound1.draw(10)
-
-    solid2.starting_point = (20, 20)
-    print("Compound 1 v. 3:")
-    compound1.draw(15)
-
-    print("Compound 2 v. 1:")
-    compound2.draw(15)
+    decorated_statistics.increment_frag_count()
+    decorated_statistics.increment_frag_count()
+    decorated_statistics.increment_frag_count()
+    decorated_statistics.increment_death_count()
 
 
 if __name__ == '__main__':
